@@ -1,6 +1,6 @@
 # PromptLifter
 
-A LangGraph-powered context extender that prioritizes custom/local LLM endpoints (like Llama, Ollama) with commercial model fallbacks, orchestrating web search and vector search to produce structured, expert-level answers from complex queries.
+An experimental LangGraph-powered context extender that prioritizes custom/local LLM endpoints (like Llama, Ollama) with commercial model fallbacks, orchestrating web search and vector search to produce structured, expert-level answers from complex queries.
 
 [![PyPI version](https://badge.fury.io/py/promptlifter.svg)](https://badge.fury.io/py/promptlifter)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)

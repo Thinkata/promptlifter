@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import time
 from typing import Optional
 
@@ -13,6 +14,8 @@ from ..config import (
     LLM_PROVIDER,
     OPENAI_API_KEY,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class RateLimiter:
@@ -62,9 +65,10 @@ class CustomLLMService:
                 if self.custom_api_key:
                     headers["Authorization"] = f"Bearer {self.custom_api_key}"
 
-                print(f"🔍 Trying custom LLM: {self.custom_endpoint}")
-                print(f"📋 Model: {self.custom_model}")
-                # Removed API key logging for security
+                logger.info(
+                    f"Trying custom LLM: {self.custom_endpoint} with model: "
+                    f"{self.custom_model}"
+                )
 
                 # Check if this is an OpenAI-compatible endpoint
                 is_openai_compatible = any(
@@ -78,7 +82,7 @@ class CustomLLMService:
                 )
 
                 if is_openai_compatible:
-                    print("🔧 Using OpenAI-compatible API format")
+                    logger.debug("Using OpenAI-compatible API format")
                     payload = {
                         "model": self.custom_model,
                         "messages": messages,
@@ -100,12 +104,12 @@ class CustomLLMService:
                         )
                         return str(result) if result is not None else None
                     else:
-                        print(
-                            f"❌ OpenAI-compatible API failed: {response.status_code}"
+                        logger.error(
+                            f"OpenAI-compatible API failed: {response.status_code}"
                         )
                         return None
                 else:  # Ollama-style API
-                    print("🔧 Using Ollama-style API format")
+                    logger.debug("Using Ollama-style API format")
                     chat_payload = {
                         "model": self.custom_model,
                         "messages": messages,
@@ -123,14 +127,13 @@ class CustomLLMService:
                             result = data.get("message", {}).get("content", "")
                             return str(result) if result is not None else None
                         else:
-                            print(
-                                f"⚠️  Chat API failed ({response.status_code}), "
-                                f"trying generate API..."
+                            logger.warning(
+                                f"Chat API failed ({response.status_code}), "
+                                f"trying generate API"
                             )
                     except Exception as chat_error:
-                        print(
-                            f"⚠️  Chat API error: {chat_error}, "
-                            f"trying generate API..."
+                        logger.warning(
+                            f"Chat API error: {chat_error}, trying generate API"
                         )
 
                     # Convert messages to single prompt for generate API
@@ -159,10 +162,12 @@ class CustomLLMService:
                         result = data.get("response", "")
                         return str(result) if result is not None else None
                     else:
-                        print(f"❌ Generate API also failed: {response.status_code}")
+                        logger.error(
+                            f"Generate API also failed: {response.status_code}"
+                        )
                         return None
         except Exception as e:
-            print(f"❌ Custom LLM failed: {e}")
+            logger.error(f"Custom LLM failed: {e}")
             return None
 
     async def _try_openai(
@@ -197,10 +202,10 @@ class CustomLLMService:
                     )
                     return str(result) if result is not None else None
                 else:
-                    print(f"❌ OpenAI API failed: {response.status_code}")
+                    logger.error(f"OpenAI API failed: {response.status_code}")
                     return None
         except Exception as e:
-            print(f"❌ OpenAI failed: {e}")
+            logger.error(f"OpenAI failed: {e}")
             return None
 
     async def _try_anthropic(
@@ -248,10 +253,10 @@ class CustomLLMService:
                     result = data.get("content", [{}])[0].get("text", "")
                     return str(result) if result is not None else None
                 else:
-                    print(f"❌ Anthropic API failed: {response.status_code}")
+                    logger.error(f"Anthropic API failed: {response.status_code}")
                     return None
         except Exception as e:
-            print(f"❌ Anthropic failed: {e}")
+            logger.error(f"Anthropic failed: {e}")
             return None
 
     async def _try_google(
@@ -298,10 +303,10 @@ class CustomLLMService:
                     )
                     return str(result) if result is not None else None
                 else:
-                    print(f"❌ Google API failed: {response.status_code}")
+                    logger.error(f"Google API failed: {response.status_code}")
                     return None
         except Exception as e:
-            print(f"❌ Google failed: {e}")
+            logger.error(f"Google failed: {e}")
             return None
 
     async def generate(self, messages: list, max_tokens: int = 1000) -> str:
@@ -320,7 +325,7 @@ class CustomLLMService:
             raise Exception(f"Unknown LLM provider: {self.llm_provider}")
 
         if result:
-            print(f"✅ Using {self.llm_provider} LLM")
+            logger.info(f"Successfully using {self.llm_provider} LLM")
             return result
 
         raise Exception(

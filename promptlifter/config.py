@@ -87,3 +87,17 @@ PINECONE_FILTER_BY_SCORE = (
 
 # LLM Provider Configuration
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "custom")  # custom, openai, anthropic, google
+
+# Conversation Context Settings
+MAX_HISTORY_TOKENS = int(
+    os.getenv("MAX_HISTORY_TOKENS", "4000")
+)  # Maximum tokens for conversation history
+MAX_CONTEXT_TOKENS = int(
+    os.getenv("MAX_CONTEXT_TOKENS", "2000")
+)  # Maximum tokens for context assembly
+ENABLE_AUTO_SEARCH = (
+    os.getenv("ENABLE_AUTO_SEARCH", "true").lower() == "true"
+)  # Enable automatic search
+SEARCH_RELEVANCE_THRESHOLD = float(
+    os.getenv("SEARCH_RELEVANCE_THRESHOLD", "0.7")
+)  # Minimum relevance score for search results

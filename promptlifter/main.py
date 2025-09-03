@@ -2,17 +2,17 @@
 """
 PromptLifter - Main application entry point.
 
-A LangGraph-powered context extender that orchestrates OpenAI, Tavily, and
-Pinecone to produce structured, expert-level answers from complex queries.
+A conversation-focused LLM interface with intelligent context management,
+optional search integration, and optimized LLM interactions.
 """
 
 import argparse
 import asyncio
 import json
 import sys
-from typing import Any, Dict
+from typing import Any
 
-from .graph import build_graph
+from .conversation_llm import ConversationLLM, ConversationResponse
 from .logging_config import setup_logging
 
 
@@ -88,7 +88,7 @@ def validate_configuration() -> None:
 
 
 def save_result_to_file(
-    result: Dict[str, Any], filename: str = "promptlifter_result.json"
+    result: Any, filename: str = "promptlifter_result.json"
 ) -> None:
     """Save the workflow result to a JSON file."""
     try:
@@ -99,28 +99,17 @@ def save_result_to_file(
         print(f"Error saving result to file: {e}")
 
 
-def print_result_summary(result: Dict[str, Any]) -> None:
-    """Print a summary of the workflow result."""
-    if "error" in result:
-        print(f"❌ Error: {result['error']}")
-        return
-
+def print_result_summary(response: Any) -> None:
+    """Print a summary of the conversation response."""
     print("\n" + "=" * 60)
-    print("📊 PROMPTLIFTER SUMMARY")
+    print("📊 PROMPTLIFTER RESPONSE")
     print("=" * 60)
 
-    original_query = result.get("original_query", "Unknown query")
-    print(f"🔍 Original Query: {original_query}")
-
-    subtask_count = result.get("subtask_count", 0)
-    print(f"📋 Subtasks Processed: {subtask_count}")
-
-    final_output = result.get("final_output")
-    if final_output:
-        print("📝 Final Response Generated: ✅")
+    if hasattr(response, "message"):
+        print("📝 Response Generated: ✅")
 
         # Show preview of the response
-        lines = final_output.split("\n")
+        lines = response.message.split("\n")
         preview_lines = lines[:10]  # Show first 10 lines
         preview = "\n".join(preview_lines)
 
@@ -129,39 +118,46 @@ def print_result_summary(result: Dict[str, Any]) -> None:
 
         if len(lines) > 10:
             print("...")
+
+        # Show context sources if available
+        if hasattr(response, "context_sources") and response.context_sources:
+            print(f"\n🔍 Context Sources: {', '.join(response.context_sources)}")
+
+        # Show token usage if available
+        if hasattr(response, "tokens_used") and response.tokens_used:
+            print(f"🔢 Tokens Used: {response.tokens_used}")
     else:
-        print("📝 Final Response Generated: ❌")
+        print("📝 Response Generated: ❌")
 
     print("=" * 60)
 
 
-def interactive_mode() -> None:
+async def interactive_mode() -> None:
     """Run the application in interactive mode."""
     print("🚀 PromptLifter Interactive Mode")
     print("Type 'quit', 'exit', or 'q' to exit")
 
-    # Build the graph
-    graph = build_graph()
+    # Initialize conversation LLM
+    llm = ConversationLLM()
 
     while True:
         try:
-            query = input("\n🔍 Query: ").strip()
+            query = input("\n💬 Message: ").strip()
 
             if query.lower() in ["quit", "exit", "q"]:
                 print("👋 Goodbye!")
                 break
 
             if not query:
-                print("Please enter a valid query.")
+                print("Please enter a valid message.")
                 continue
 
-            print(f"\n🚀 Processing query: {query}")
+            print(f"\n🚀 Processing message: {query}")
 
-            # Run the workflow
-            state = {"input": query}
-            result = asyncio.run(graph.ainvoke(state))
+            # Run the conversation
+            response = await llm.chat(query)
 
-            print_result_summary(result)
+            print_result_summary(response)
 
             # Ask if user wants to save the result
             save_choice = input("\n💾 Save result to file? (y/n): ").strip().lower()
@@ -171,7 +167,7 @@ def interactive_mode() -> None:
                 ).strip()
                 if not filename:
                     filename = "promptlifter_result.json"
-                save_result_to_file(result, filename)
+                save_result_to_file(response.__dict__, filename)
 
         except KeyboardInterrupt:
             print("\n\n👋 Goodbye!")
@@ -184,22 +180,21 @@ def main() -> None:
     """Main application entry point."""
     # Setup logging
     setup_logging(level="INFO")
-    # logger = get_logger(__name__)  # Unused for now
 
     parser = argparse.ArgumentParser(
-        description="PromptLifter - LangGraph-powered research assistant",
+        description="PromptLifter - Conversation-focused LLM interface",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
             """
 Examples:
-  python main.py --query "Research quantum computing trends"
+  python main.py --query "What is machine learning?"
   python main.py --interactive
-  python main.py --query "AI in healthcare" --save result.json
+  python main.py --query "Explain quantum computing" --save result.json
             """
         ),
     )
 
-    parser.add_argument("--query", "-q", type=str, help="Research query to process")
+    parser.add_argument("--query", "-q", type=str, help="Message to send to the LLM")
 
     parser.add_argument(
         "--interactive", "-i", action="store_true", help="Run in interactive mode"
@@ -217,22 +212,25 @@ Examples:
     validate_configuration()
 
     if args.interactive:
-        interactive_mode()
+        asyncio.run(interactive_mode())
     elif args.query:
-        print(f"🚀 Processing query: {args.query}")
+        print(f"🚀 Processing message: {args.query}")
 
-        # Build and run the graph
-        graph = build_graph()
-        state = {"input": args.query}
-        result = asyncio.run(graph.ainvoke(state))
+        # Initialize and run conversation
+        async def run_query() -> ConversationResponse:
+            llm = ConversationLLM()
+            response = await llm.chat(args.query)
+            return response
+
+        result = asyncio.run(run_query())
 
         print_result_summary(result)
 
         if args.save:
-            save_result_to_file(result, args.save)
+            save_result_to_file(result.__dict__, args.save)
         elif args.verbose:
             print("\n📄 Full Result:")
-            print(json.dumps(result, indent=2, default=str))
+            print(json.dumps(result.__dict__, indent=2, default=str))
     else:
         parser.print_help()
 

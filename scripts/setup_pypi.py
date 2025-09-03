@@ -76,7 +76,11 @@ def check_environment():
 
     if missing_packages:
         print(f"\n📦 Installing missing packages: {', '.join(missing_packages)}")
-        os.system(f"{sys.executable} -m pip install {' '.join(missing_packages)}")
+        import subprocess
+
+        subprocess.run(
+            [sys.executable, "-m", "pip", "install"] + missing_packages, check=True
+        )
 
     # Check project structure
     required_files = ["pyproject.toml", "README.md", "LICENSE"]

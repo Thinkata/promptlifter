@@ -13,16 +13,34 @@ import pytest
 def mock_env_vars() -> Generator[dict[str, str], None, None]:
     """Mock environment variables for testing."""
     env_vars = {
+        # Custom LLM Configuration (Primary - Local Models)
         "CUSTOM_LLM_ENDPOINT": "http://localhost:11434",
         "CUSTOM_LLM_MODEL": "llama3.1",
         "CUSTOM_LLM_API_KEY": "",
+        # LLM Provider Configuration
+        "LLM_PROVIDER": "custom",
+        # Embedding Configuration
+        "EMBEDDING_PROVIDER": "custom",
+        "EMBEDDING_MODEL": "nomic-embed-text",
+        # Commercial LLM Configuration (Fallback)
         "OPENAI_API_KEY": "test-openai-key",
         "ANTHROPIC_API_KEY": "test-anthropic-key",
         "GOOGLE_API_KEY": "test-google-key",
+        # Search and Vector Configuration
+        "TAVILY_API_KEY": "test-tavily-key",
         "PINECONE_API_KEY": "test-pinecone-key",
         "PINECONE_INDEX": "test-index",
         "PINECONE_NAMESPACE": "test-namespace",
-        "TAVILY_API_KEY": "test-tavily-key",
+        # Pinecone Search Configuration
+        "PINECONE_TOP_K": "10",
+        "PINECONE_SIMILARITY_THRESHOLD": "0.7",
+        "PINECONE_INCLUDE_SCORES": "true",
+        "PINECONE_FILTER_BY_SCORE": "true",
+        # Conversation Context Configuration
+        "MAX_HISTORY_TOKENS": "4000",
+        "MAX_CONTEXT_TOKENS": "2000",
+        "ENABLE_AUTO_SEARCH": "true",
+        "SEARCH_RELEVANCE_THRESHOLD": "0.7",
     }
 
     with patch.dict(os.environ, env_vars):

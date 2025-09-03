@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "promptlifter"
-version = "v0.0.1"
-description = "LLM-powered contextual expansion using LangGraph"
+version = "0.4.0"
+description = "LLM-powered conversation interface with intelligent context management, real-time search integration, and seamless conversation flow"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
@@ -20,19 +20,14 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Text Processing :: Linguistic",
     "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.13"
 dependencies = [
-    "langgraph>=0.6.0",
     "httpx>=0.24.0",
     "python-dotenv>=1.0.0",
     "openai>=1.0.0",
@@ -41,7 +36,7 @@ dependencies = [
     "pinecone>=7.3.0",
     "tavily-python>=0.3.0",
 ]
-keywords = ["llm", "langgraph", "research", "ai", "machine-learning", "context-expansion", "search", "vector-search"]
+keywords = ["llm", "conversation", "ai", "machine-learning", "context-management", "search", "vector-search", "chatbot", "tavily", "pinecone", "ollama", "openai", "anthropic", "real-time-search", "conversation-flow"]
 
 [project.optional-dependencies]
 dev = [

@@ -241,35 +241,6 @@ class TestEmbeddingService:
         assert result == result2
 
     @pytest.mark.asyncio
-    async def test_embed_text_openai_success(self) -> None:
-        """Test embed_text with successful OpenAI embedding."""
-        with patch.object(EmbeddingService, "_get_openai_embedding") as mock_openai:
-            mock_openai.return_value = [0.1, 0.2, 0.3, 0.4, 0.5] * 307 + [
-                0.1
-            ]  # 1536 dimensions
-
-            service = EmbeddingService()
-            result = await service.embed_text("test text")
-
-            assert result is not None
-            assert len(result) == 1536
-            mock_openai.assert_called_once_with("test text")
-
-    @pytest.mark.asyncio
-    async def test_embed_text_openai_fallback(self) -> None:
-        """Test embed_text with OpenAI failure and fallback."""
-        with patch.object(EmbeddingService, "_get_openai_embedding") as mock_openai:
-            mock_openai.return_value = None
-
-            service = EmbeddingService()
-            result = await service.embed_text("test text")
-
-            assert result is not None
-            assert len(result) == 1536
-            # Should use fallback embedding
-            assert result != [0.1, 0.2, 0.3, 0.4, 0.5] * 307 + [0.1]
-
-    @pytest.mark.asyncio
     async def test_embed_text_custom_success(self) -> None:
         """Test embed_text with successful custom embedding."""
         with patch.dict("os.environ", {"EMBEDDING_PROVIDER": "custom"}):
@@ -302,6 +273,20 @@ class TestEmbeddingService:
                 assert result is not None
                 assert len(result) == 1536
                 mock_custom.assert_called_once_with("test text")
+
+    @pytest.mark.asyncio
+    async def test_embed_text_openai_fallback(self) -> None:
+        """Test embed_text with OpenAI failure and fallback."""
+        with patch.object(EmbeddingService, "_get_openai_embedding") as mock_openai:
+            mock_openai.return_value = None
+
+            service = EmbeddingService()
+            result = await service.embed_text("test text")
+
+            assert result is not None
+            assert len(result) == 1536
+            # Should use fallback embedding
+            assert result != [0.1, 0.2, 0.3, 0.4, 0.5] * 307 + [0.1]
 
     @pytest.mark.asyncio
     async def test_embed_text_anthropic_success(self) -> None:

@@ -7,17 +7,40 @@ on:
     branches: [ main ]
 
 env:
+  # Custom LLM Configuration (Primary - Local Models)
+  CUSTOM_LLM_ENDPOINT: "http://localhost:11434"
+  CUSTOM_LLM_MODEL: "llama3.1"
+  CUSTOM_LLM_API_KEY: ""
+
+  # LLM Provider Configuration
+  LLM_PROVIDER: "custom"
+
+  # Embedding Configuration
+  EMBEDDING_PROVIDER: "custom"
+  EMBEDDING_MODEL: "nomic-embed-text"
+
+  # Commercial LLM Configuration (Fallback)
   OPENAI_API_KEY: "sk-test-openai-mock-key-123456789"
   ANTHROPIC_API_KEY: "sk-ant-test-anthropic-mock-key-123456789"
+  GOOGLE_API_KEY: "sk-test-google-mock-key-123456789"
+
+  # Search and Vector Configuration
   TAVILY_API_KEY: "tvly-test-tavily-mock-key-123456789"
   PINECONE_API_KEY: "test-pinecone-mock-key-123456789"
   PINECONE_INDEX: "test-index"
-  CUSTOM_LLM_ENDPOINT: "https://api.example.com/v1"
-  CUSTOM_LLM_MODEL: "test-model"
-  CUSTOM_LLM_API_KEY: "sk-test-custom-mock-key-123456789"
-  EMBEDDING_PROVIDER: "openai"
-  EMBEDDING_MODEL: "text-embedding-ada-002"
-  EMBEDDING_API_KEY: "sk-test-embedding-mock-key-123456789"
+  PINECONE_NAMESPACE: "research"
+
+  # Pinecone Search Configuration
+  PINECONE_TOP_K: "10"
+  PINECONE_SIMILARITY_THRESHOLD: "0.7"
+  PINECONE_INCLUDE_SCORES: "true"
+  PINECONE_FILTER_BY_SCORE: "true"
+
+  # Conversation Context Configuration
+  MAX_HISTORY_TOKENS: "4000"
+  MAX_CONTEXT_TOKENS: "2000"
+  ENABLE_AUTO_SEARCH: "true"
+  SEARCH_RELEVANCE_THRESHOLD: "0.7"
   
 jobs:
   test:
@@ -61,12 +84,6 @@ jobs:
     - name: Test with pytest
       run: |
         pytest tests/ --cov=promptlifter --cov-report=xml --cov-report=term-missing
-      env:
-        OPENAI_API_KEY: "sk-test-openai-mock-key-123456789"
-        ANTHROPIC_API_KEY: "sk-ant-test-anthropic-mock-key-123456789"
-        TAVILY_API_KEY: "tvly-test-tavily-mock-key-123456789"
-        PINECONE_API_KEY: "test-pinecone-mock-key-123456789"
-        PINECONE_INDEX: "test-index"
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4

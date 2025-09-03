@@ -3,9 +3,9 @@
 Test runner script for PromptLifter.
 """
 
+import os
 import subprocess
 import sys
-import os
 
 
 def run_tests():

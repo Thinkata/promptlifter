@@ -5,10 +5,10 @@ Release script for PromptLifter.
 This script automates the process of building and uploading packages to PyPI.
 """
 
-import subprocess
-import sys
 import os
 import shutil
+import subprocess
+import sys
 from pathlib import Path
 
 

@@ -87,31 +87,61 @@ promptlifter --query "Quantum computing research" --save results.json
 ## 🏗️ Architecture
 
 ```
-promptlifter/
-├── promptlifter/                    # Main package
-│   ├── __init__.py                  # Package initialization
-│   ├── main.py                      # Main application entry point
-│   ├── conversation_llm.py          # Core conversation interface
-│   ├── config.py                    # Configuration and environment variables
-│   ├── logging_config.py            # Logging configuration
-│   ├── context/                     # Context management system
-│   │   ├── conversation_manager.py  # Conversation history management
-│   │   ├── context_retriever.py     # Intelligent context retrieval
-│   │   └── context_optimizer.py     # Context optimization
-│   └── nodes/                       # Utility services
-│       ├── llm_service.py           # LLM service with rate limiting
-│       ├── embedding_service.py     # Embedding service
-│       ├── run_tavily_search.py     # Web search integration
-│       └── run_pinecone_search.py   # Vector search integration
-├── tests/                           # Comprehensive test suite
-│   ├── test_conversation_interface_simple.py  # Core functionality tests
-│   ├── test_conversation_interface.py         # Full interface tests
-│   ├── test_config.py               # Configuration tests
-│   ├── test_llm_service.py          # LLM service tests
-│   ├── test_embedding_service.py    # Embedding service tests
-│   └── test_nodes.py                # Node tests
-├── examples/                        # Usage examples
-└── scripts/                         # Build and release scripts
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                USER INTERFACE                               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐                     │
+│  │     CLI     │    │  Python API │    │ Interactive │                     │
+│  │  Interface  │    │             │    │    Mode     │                     │
+│  └─────────────┘    └─────────────┘    └─────────────┘                     │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           MAIN APPLICATION                                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  ┌─────────────────────────────────────────────────────────────────────────┐ │
+│  │                        ConversationLLM                                 │ │
+│  │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐        │ │
+│  │  │   Conversation  │  │   Context       │  │   Context       │        │ │
+│  │  │    Manager      │  │   Retriever     │  │   Optimizer     │        │ │
+│  │  └─────────────────┘  └─────────────────┘  └─────────────────┘        │ │
+│  └─────────────────────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              SERVICES LAYER                                │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐       │
+│  │    LLM      │  │ Embedding   │  │   Tavily    │  │  Pinecone   │       │
+│  │  Service    │  │  Service    │  │   Search    │  │   Vector    │       │
+│  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘       │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           EXTERNAL PROVIDERS                               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐       │
+│  │   OpenAI    │  │ Anthropic   │  │   Google    │  │   Custom    │       │
+│  │     API     │  │     API     │  │     API     │  │    LLM      │       │
+│  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘       │
+│                                                                             │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐       │
+│  │   Web       │  │  Vector     │  │  Local      │  │   Remote    │       │
+│  │  Content    │  │  Database   │  │  Models     │  │  Services   │       │
+│  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘       │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+DATA FLOW:
+User Input → CLI/API → Main App → ConversationLLM → Context Management
+                                                      ↓
+External Search ← Context Retriever ← Context Analysis
+                                                      ↓
+LLM Processing ← Context Optimizer ← Search Results + History
+                                                      ↓
+Response Generation → User Output
 ```
 
 ## 🔧 Setup
@@ -292,7 +322,7 @@ pytest tests/ -v
 pytest tests/ --cov=promptlifter --cov-report=html
 ```
 
-## 🆕 Recent Improvements (v0.4.0+)
+## 🆕 Recent Improvements (v0.5.0+)
 
 ### Enhanced Context Management
 - **Simplified Relevance Scoring**: Removed complex keyword matching in favor of trusting search engine results
@@ -309,7 +339,7 @@ pytest tests/ --cov=promptlifter --cov-report=html
 - **Clean Architecture**: Simplified codebase with removed complexity and improved maintainability
 - **Better Error Handling**: Graceful fallbacks and improved error messages
 
-### Key Fixes in v0.4.0
+### Key Fixes in v0.5.0
 - ✅ **Fixed Embedding Service**: Resolved 400 errors when using custom embedding models with Ollama
 - ✅ **Improved Context Flow**: Follow-up questions now maintain conversation context properly
 - ✅ **Simplified Relevance Logic**: Removed brittle keyword matching for more reliable search results
@@ -349,67 +379,6 @@ pytest tests/ --cov=promptlifter --cov-report=html
 - Manages token limits and compression
 - Prioritizes most relevant information
 
-## 📊 Example Output
-
-### Conversation with Context Flow
-```
-User: What is machine learning?
-Assistant: Machine learning (ML) is a subset of artificial intelligence (AI) that involves the development of algorithms and statistical models that enable computers to learn from data, make predictions, and improve their performance on a task without being explicitly programmed...
-
-User: Can you give me an example?
-Assistant: Here's a practical example: Image Classification using Machine Learning
-
-**How it works:**
-1. **Data Collection**: Gather a large dataset of images labeled as "cats" or "dogs"
-2. **Model Training**: Use a machine learning algorithm (e.g., CNN) to train on the labeled dataset
-3. **Model Evaluation**: Test the trained model on separate images to evaluate performance
-4. **Prediction**: Use the model to classify new, unseen images
-
-**Example Code (Python using TensorFlow):**
-```python
-import tensorflow as tf
-from tensorflow import keras
-
-# Load and preprocess data
-(x_train, y_train), (x_test, y_test) = keras.datasets.cifar10.load_data()
-x_train = x_train.astype('float32') / 255
-
-# Define CNN model
-model = keras.Sequential([
-    keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(32, 32, 3)),
-    keras.layers.MaxPooling2D((2, 2)),
-    keras.layers.Flatten(),
-    keras.layers.Dense(64, activation='relu'),
-    keras.layers.Dense(10, activation='softmax')
-])
-
-# Train and evaluate
-model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-model.fit(x_train, y_train, epochs=10)
-```
-
-# Context Sources Used: [conversation_history]
-# Tokens Used: 1,247
-# Conversation Stats: {total_turns: 2, current_tokens: 1,247, max_history_tokens: 4000}
-```
-
-### Real-Time Search Example
-```
-User: Current weather in Dallas, Texas
-Assistant: The current weather in Dallas, Texas is:
-
-- Temperature: 77°F (as of 9:17 AM)
-- Conditions: Sunny
-- RealFeel: 87°
-- High: 91°F
-- Chance of rain: 33% (at 7 pm)
-- Humidity: 59%
-- Winds: NNW at 5 to 10 mph
-
-# Context Sources Used: [tavily]
-# Tokens Used: 156
-```
-
 ## 🎯 Configuration Options
 
 ### Conversation Settings
@@ -436,22 +405,28 @@ Assistant: The current weather in Dallas, Texas is:
 ### Custom Configuration
 
 ```python
+import asyncio
 from promptlifter import ConversationLLM, ConversationConfig
 
-# Create custom configuration
-config = ConversationConfig(
-    max_history_tokens=3000,
-    max_context_tokens=1500,
-    enable_auto_search=True,
-    search_relevance_threshold=0.8,
-    system_prompt="You are a research assistant specializing in AI."
-)
+async def main():
+    # Create custom configuration
+    config = ConversationConfig(
+        max_history_tokens=3000,
+        max_context_tokens=1500,
+        enable_auto_search=True,
+        search_relevance_threshold=0.8,
+        system_prompt="You are a research assistant specializing in AI."
+    )
 
-# Initialize with custom config
-llm = ConversationLLM(config)
+    # Initialize with custom config
+    llm = ConversationLLM(config)
 
-# Use the configured LLM
-response = await llm.chat("What are the latest AI trends?")
+    # Use the configured LLM
+    response = await llm.chat("What are the latest AI trends?")
+    print(response.message)
+
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
 
 ### Conversation Management
@@ -514,15 +489,25 @@ print(f"Compression enabled: {optimization_stats['compression_enabled']}")
 ### Debug Information
 
 ```python
-# Enable detailed logging
+import asyncio
 import logging
-logging.basicConfig(level=logging.INFO)
+from promptlifter import ConversationLLM
 
-# Get detailed response information
-response = await llm.chat("Your question")
-print(f"Context sources: {response.context_sources}")
-print(f"Tokens used: {response.tokens_used}")
-print(f"Conversation stats: {response.conversation_stats}")
+async def debug_example():
+    # Enable detailed logging
+    logging.basicConfig(level=logging.INFO)
+    
+    # Initialize LLM
+    llm = ConversationLLM()
+
+    # Get detailed response information
+    response = await llm.chat("Your question")
+    print(f"Context sources: {response.context_sources}")
+    print(f"Tokens used: {response.tokens_used}")
+    print(f"Conversation stats: {response.conversation_stats}")
+
+if __name__ == "__main__":
+    asyncio.run(debug_example())
 ```
 
 ### Search Debugging

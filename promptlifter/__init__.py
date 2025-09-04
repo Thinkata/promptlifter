@@ -6,7 +6,7 @@ management, optional search integration, and optimized LLM interactions for
 conversational AI.
 """
 
-__version__ = "0.3.0a1"
+__version__ = "0.5.0"
 __author__ = "PromptLifter Team"
 __description__ = "LLM-powered conversation interface with context management"
 

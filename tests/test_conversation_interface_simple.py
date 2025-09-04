@@ -153,35 +153,77 @@ class TestContextRetriever:
         assert retriever.tavily_enabled is True
         assert retriever.pinecone_enabled is True
 
-    def test_should_use_search(self) -> None:
-        """Test search decision logic."""
+    @pytest.mark.asyncio
+    async def test_should_use_search(self) -> None:
+        """Test search decision logic using LLM-based classifier."""
         retriever = ContextRetriever()
 
-        # Research queries should use search
-        assert retriever.should_use_search("What is machine learning?", "") is True
-        assert retriever.should_use_search("Research quantum computing", "") is True
-        assert retriever.should_use_search("Tell me about AI", "") is True
+        # Mock the LLM service to return expected classifications
+        mock_research = {
+            "should_search": True,
+            "reasoning": "Research query needs search",
+            "confidence": 0.9,
+            "enhanced_query": "What is machine learning?",
+        }
 
-        # Conversational queries should not trigger search
-        assert (
-            retriever.should_use_search("How are you?", "") is False
-        )  # Conversational pattern
-        assert (
-            retriever.should_use_search("Hello", "") is False
-        )  # Conversational pattern
-        assert (
-            retriever.should_use_search("Thanks", "") is False
-        )  # Conversational pattern
-
-        # With sufficient conversation history, some queries might not need search
-        long_history = "This is a long conversation history " * 20  # ~500 words
-        assert (
-            retriever.should_use_search(
-                "That's very helpful, thank you for the detailed explanation",
-                long_history,
+        with patch.object(
+            retriever.query_classifier, "classify_query", return_value=mock_research
+        ):
+            # Research queries should use search
+            assert (
+                await retriever.query_classifier.should_use_search(
+                    "What is machine learning?", ""
+                )
+                is True
             )
-            is False
-        )
+            assert (
+                await retriever.query_classifier.should_use_search(
+                    "Research quantum computing", ""
+                )
+                is True
+            )
+            assert (
+                await retriever.query_classifier.should_use_search(
+                    "Tell me about AI", ""
+                )
+                is True
+            )
+
+        # Mock for conversational queries
+        mock_conversational = {
+            "should_search": False,
+            "reasoning": "Conversational query",
+            "confidence": 0.9,
+            "enhanced_query": None,
+        }
+
+        with patch.object(
+            retriever.query_classifier,
+            "classify_query",
+            return_value=mock_conversational,
+        ):
+            # Conversational queries should not trigger search
+            assert (
+                await retriever.query_classifier.should_use_search("How are you?", "")
+                is False
+            )  # Conversational pattern
+            assert (
+                await retriever.query_classifier.should_use_search("Hello", "") is False
+            )  # Conversational pattern
+            assert (
+                await retriever.query_classifier.should_use_search("Thanks", "")
+                is False
+            )  # Conversational pattern
+
+            # With sufficient conversation history, some queries might not need search
+            long_history = "This is a long conversation history " * 20  # ~500 words
+            assert (
+                await retriever.query_classifier.should_use_search(
+                    "That's very helpful, thank you for the detailed explanation",
+                    long_history,
+                )
+                is False
+            )
 
 
 class TestOptimizedContext:

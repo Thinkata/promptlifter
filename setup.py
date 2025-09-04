@@ -24,7 +24,7 @@ def read_requirements():
 
 setup(
     name="promptlifter",
-    version="0.4.0",
+    version="0.5.0",
     author="PromptLifter Team",
     author_email="promptlifter@thinkata.com",
     description="LLM-powered conversation interface with intelligent context management, real-time search integration, and seamless conversation flow",

@@ -186,7 +186,9 @@ class TestContextRetriever:
         """Test context retrieval for conversational query."""
         retriever = ContextRetriever()
 
-        with patch.object(retriever, "should_use_search", return_value=False):
+        with patch.object(
+            retriever.query_classifier, "should_use_search", return_value=False
+        ):
             chunks = await retriever.retrieve_relevant_context("How are you?", "")
 
             # For conversational queries, should return empty chunks
@@ -198,7 +200,9 @@ class TestContextRetriever:
         retriever = ContextRetriever()
 
         with (
-            patch.object(retriever, "should_use_search", return_value=True),
+            patch.object(
+                retriever.query_classifier, "should_use_search", return_value=True
+            ),
             patch.object(
                 retriever, "_search_tavily", return_value="Web search results"
             ),
@@ -213,19 +217,50 @@ class TestContextRetriever:
             # Should have chunks from both sources
             assert len(chunks) >= 0  # May be empty if no relevant results
 
-    def test_should_use_search(self) -> None:
-        """Test search decision logic."""
+    @pytest.mark.asyncio
+    async def test_should_use_search(self) -> None:
+        """Test search decision logic using LLM-based classifier."""
         retriever = ContextRetriever()
 
-        # Research queries should use search
-        assert retriever.should_use_search("What is machine learning?", "") is True
-        assert retriever.should_use_search("Research quantum computing", "") is True
-        assert retriever.should_use_search("Tell me about AI", "") is True
+        # Mock the LLM service to return expected classifications
+        mock_classification = {
+            "should_search": True,
+            "reasoning": "Research query needs search",
+            "confidence": 0.9,
+            "enhanced_query": "What is machine learning?",
+        }
 
-        # Conversational queries should not use search
-        assert retriever.should_use_search("How are you?", "") is False
-        assert retriever.should_use_search("Hello", "") is False
-        assert retriever.should_use_search("Thanks", "") is False
+        with patch.object(
+            retriever.query_classifier,
+            "classify_query",
+            return_value=mock_classification,
+        ):
+            # Research queries should use search
+            assert (
+                await retriever.query_classifier.should_use_search(
+                    "What is machine learning?", ""
+                )
+                is True
+            )
+
+        # Mock for conversational queries
+        mock_conversational = {
+            "should_search": False,
+            "reasoning": "Conversational query",
+            "confidence": 0.9,
+            "enhanced_query": None,
+        }
+
+        with patch.object(
+            retriever.query_classifier,
+            "classify_query",
+            return_value=mock_conversational,
+        ):
+            # Conversational queries should not use search
+            assert (
+                await retriever.query_classifier.should_use_search("How are you?", "")
+                is False
+            )
 
 
 class TestOptimizedContext:
